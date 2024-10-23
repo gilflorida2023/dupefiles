@@ -17,8 +17,21 @@ use std::path::{Path, PathBuf};
 use anyhow::{Context, Result};
 use walkdir::WalkDir;
 use dupefiles::{get_file_size,compute_sha256,is_hidden};
+use std::io::{Error,ErrorKind};
+//use std::io::{BufReader, Read, Error, ErrorKind};
 
-fn find_duplicates(directory: &Path) -> Result<()> {    
+
+fn find_duplicates(directory: &Path) -> Result<()> {
+    /*
+    Create empty hash table.
+    For each file in the directory tree, 
+      Note: hidden files, hidden directories and zero byte files are skipped.
+      Create an entry in a hash table which is key'ed by sha256 of the file. 
+          Associate with each key :Store absolute path and filename.
+          if the hash already exists, 
+              print a duplicate report consisting of :
+                  dupe1.filename, dupe1.filesize,dupe2.filename,dupe2.filesize
+     */ 
     static mut HEADER_PRINTED: bool = false;
 
     let mut hash_map: HashMap<String, PathBuf> = HashMap::new();
@@ -58,7 +71,7 @@ fn find_duplicates(directory: &Path) -> Result<()> {
     Ok(())
 }
 
-fn main() -> Result<()> {
+fn main() -> Result<(),Error> {
     let args: Vec<String> = env::args().collect();
     if args.len() != 2 {
         eprintln!("Usage: {} <directory>\nFinds all duplicate files in a specified sub-directory tree specified on command-line.", args[0]);
@@ -66,7 +79,10 @@ fn main() -> Result<()> {
     }
 
     let directory = Path::new(&args[1]);
-    find_duplicates(directory)?;
+    if ! directory.try_exists()? {
+        return Err(Error::new(ErrorKind::NotFound, "File or directory not found"));
+    }
+    let _ = find_duplicates(directory);
 
     Ok(())
 }
