@@ -20,7 +20,10 @@ use anyhow::{Context, Result};
 use walkdir::WalkDir;
 use dupefiles::{get_file_size,compute_sha256,is_hidden};
 
-fn find_duplicates(directory: &Path) -> Result<()> {
+fn find_duplicates(directory: &Path) -> Result<()> {    
+    static mut HEADER_PRINTED: bool = false;
+    
+
     let mut hash_map: HashMap<String, PathBuf> = HashMap::new();
 
     for entry in WalkDir::new(directory).into_iter().filter_map(|e| e.ok()) {
@@ -43,6 +46,12 @@ fn find_duplicates(directory: &Path) -> Result<()> {
                     Ok(size) => size,
                     Err(_e) => 0,
                 };
+                unsafe {
+                    if ! HEADER_PRINTED {
+                        eprintln!("DUPE1.NAME,DUPE1.SIZE,DUPE2.NAME,DUPE2.SIZE");
+                        HEADER_PRINTED = true;
+                    }
+                }
                 eprintln!("\"{}\",{},\"{}\",{}", existing_path.display(),existing_fsize,path.display(),fsize);
             } else {
                 hash_map.insert(hash, path.to_path_buf());
