@@ -18,9 +18,7 @@ use std::env;
 use std::path::{Path, PathBuf};
 use anyhow::{Context, Result};
 use walkdir::WalkDir;
-use dupefiles::is_hidden;
-use dupefiles::compute_sha256;
-use dupefiles::get_file_size;
+use dupefiles::{get_file_size,compute_sha256,is_hidden};
 
 fn find_duplicates(directory: &Path) -> Result<()> {
     let mut hash_map: HashMap<String, PathBuf> = HashMap::new();
