@@ -1,16 +1,14 @@
 /*
   Finds all duplicate files in a specified sub-directory tree specified on command-line.
   
-  Associated with the sha256 is the absolute filename.
   Create empty hash table.
   For each file in the directory tree, 
       Create an entry in a hash table which is key'ed by sha256 of the file. 
-          associated with key :Store absolute path and filename.
+          Associate with each key :Store absolute path and filename.
           if the hash already exists, 
               print a duplicate report consisting of :
-                  filename_from_table, its filesize and
-                  new_filename,its filesize
-Note: Have not noticed a checksum related to different sized files, but still looking.
+                  dupe1.filename, dupe1.filesize,dupe2.filename,dupe2.filesize
+Note: hidden files, hidden directories and zero byte files are skipped.
 */
 
 use std::collections::HashMap;
@@ -22,7 +20,6 @@ use dupefiles::{get_file_size,compute_sha256,is_hidden};
 
 fn find_duplicates(directory: &Path) -> Result<()> {    
     static mut HEADER_PRINTED: bool = false;
-    
 
     let mut hash_map: HashMap<String, PathBuf> = HashMap::new();
 
@@ -37,7 +34,6 @@ fn find_duplicates(directory: &Path) -> Result<()> {
             continue;
         }
         if path.is_file() {
-            //println!("{}",path.display());
             let hash = compute_sha256::compute_sha256(path)
                 .with_context(|| format!("Failed to compute hash for {}", path.display()))?;
 
@@ -48,11 +44,11 @@ fn find_duplicates(directory: &Path) -> Result<()> {
                 };
                 unsafe {
                     if ! HEADER_PRINTED {
-                        eprintln!("DUPE1.NAME,DUPE1.SIZE,DUPE2.NAME,DUPE2.SIZE");
+                        println!("DUPE1.NAME,DUPE1.SIZE,DUPE2.NAME,DUPE2.SIZE");
                         HEADER_PRINTED = true;
                     }
                 }
-                eprintln!("\"{}\",{},\"{}\",{}", existing_path.display(),existing_fsize,path.display(),fsize);
+                println!("\"{}\",{},\"{}\",{}", existing_path.display(),existing_fsize,path.display(),fsize);
             } else {
                 hash_map.insert(hash, path.to_path_buf());
             }
