@@ -18,8 +18,6 @@ use anyhow::{Context, Result};
 use walkdir::WalkDir;
 use dupefiles::{get_file_size,compute_sha256,is_hidden};
 use std::io::{Error,ErrorKind};
-//use std::io::{BufReader, Read, Error, ErrorKind};
-
 
 fn find_duplicates(directory: &Path) -> Result<()> {
     /*
@@ -83,6 +81,6 @@ fn main() -> Result<(),Error> {
         return Err(Error::new(ErrorKind::NotFound, "File or directory not found"));
     }
     let _ = find_duplicates(directory);
-
+    eprintln!("Success");
     Ok(())
 }
