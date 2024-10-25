@@ -159,9 +159,11 @@ fn find_duplicates(directory: &Path) -> Result<()> {
 /// * The required input file argument is missing
 /// * The input file cannot be read
 fn main() -> Result<(),Error> {
+    let name = env!("CARGO_PKG_NAME");
+    let version = env!("CARGO_PKG_VERSION");
     let args: Vec<String> = env::args().collect();
     if args.len() != 2 {
-        eprintln!("Usage: {} <directory>\nFinds all duplicate files in a specified sub-directory tree specified on command-line.", args[0]);
+        eprintln!("\nVersion:{}\nUsage: {} <directory>\nFinds all duplicate files in a specified sub-directory tree specified on command-line.", version, name);
         std::process::exit(1);
     }
 
