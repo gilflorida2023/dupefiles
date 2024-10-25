@@ -18,6 +18,16 @@ use anyhow::{Context, Result};
 use walkdir::WalkDir;
 use dupefiles::{get_file_size,compute_sha256,is_hidden};
 use std::io::{Error,ErrorKind};
+use std::os::unix::fs::MetadataExt;
+
+fn get_file_info(path: &Path) -> std::io::Result<(u64, u64)> {
+    let metadata = fs::metadata(path)?;
+    
+    let inode = metadata.ino();
+    let device_id = metadata.dev();
+    
+    Ok((inode, device_id))
+}
 
 fn find_duplicates(directory: &Path) -> Result<()> {
     /*
@@ -88,7 +98,43 @@ fn main() -> Result<(),Error> {
 fn detect_duplicates(files: Vec<&str>) -> bool {
     // This function should be implemented in your dupefiles application.
     // Here it's just a placeholder.
-   false 
+    let file1 = Path::new(files[0]);
+    let file2 = Path::new(files[1]);
+
+    // validate two files exist
+    if ! file1.try_exists().unwrap() || ! file2.try_exists().unwrap() {
+        return false;
+    }
+    
+    // verify two files have same size
+    let f1size:u64= match get_file_size::get_file_size(file1) {
+        Ok(size) => size,
+        Err(_e) => 0,
+    };
+
+    let f2size:u64= match get_file_size::get_file_size(file2) {
+        Ok(size) => size,
+        Err(_e) => 0,
+    };
+
+    if f1size != f2size {
+        return false;
+    }
+
+    let f1hash = compute_sha256::compute_sha256(file1).with_context(|| format!("Failed to compute hash for {}", file1.display())).unwrap();
+    let f2hash = compute_sha256::compute_sha256(file2).with_context(|| format!("Failed to compute hash for {}", file2.display())).unwrap();
+    
+    if f1hash != f2hash {
+        return false;   
+    }
+
+    let (f1inode, f1device_id) = get_file_info(file1).unwrap();
+    let (f2inode, f2device_id) = get_file_info(file2).unwrap();
+
+    if f1device_id != f2device_id || f1inode != f2inode {
+        return false;
+    }
+   true 
 }
 
 #[cfg(test)]
