@@ -95,7 +95,7 @@ fn main() -> Result<(),Error> {
     Ok(())
 }
 
-fn detect_duplicates(files: Vec<&str>) -> bool {
+fn is_duplicate(files: Vec<&str>) -> bool {
     // This function should be implemented in your dupefiles application.
     // Here it's just a placeholder.
     let file1 = Path::new(files[0]);
@@ -131,10 +131,10 @@ fn detect_duplicates(files: Vec<&str>) -> bool {
     let (f1inode, f1device_id) = get_file_info(file1).unwrap();
     let (f2inode, f2device_id) = get_file_info(file2).unwrap();
 
-    if f1device_id != f2device_id || f1inode != f2inode {
+    if  f1device_id == f2device_id && f1inode == f2inode {
         return false;
     }
-   true 
+    true
 }
 
 #[cfg(test)]
@@ -166,7 +166,7 @@ mod tests {
         ];
     
         // Call the duplicate detection function
-        let result = detect_duplicates(files);
+        let result = is_duplicate(files);
     
         // Assert that no duplicates are detected since they point to the same inode
         assert_eq!(result, false, "Should not detect duplicates for hard links");
