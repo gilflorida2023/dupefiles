@@ -3,6 +3,32 @@ use std::io::{BufReader, Read, Result,Error, ErrorKind};
 use std::path::Path;
 use sha2::{Sha256, Digest};
 
+/// Calculate the sha256sum for the supplied&Path and return the checksum.
+///
+/// This function accepts a &Path reference.
+///
+/// # Arguments
+///
+/// * `path` - The file is opened and the checksum calculated.
+///
+/// # Returns
+///
+/// sha256checksum for the input file as a String.
+///
+/// # Examples
+///
+///
+/// # Panics
+///
+/// This function may panic if the file does not exist or is unreadible.
+///
+/// # Errors
+///
+/// This function uses `Result`, to report issues which prevent access to the file.
+///
+/// # Safety
+///
+/// This function is always safe to call.
 pub fn compute_sha256(path: &Path) -> Result<String> {
     if ! path.try_exists()? {
         // Path does not exist, return an error

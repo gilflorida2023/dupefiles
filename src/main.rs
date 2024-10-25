@@ -91,7 +91,7 @@ fn is_duplicate_file(file1: &Path,file2: &Path) -> bool {
 }
 
 /// This function takes a directory Path value and prints to stdout, a csv file indicating duplicates identified.
-/// It skips zero byte files as well as hidden files and hidden directories. It calls ['crate::dupefiles::is_duplicate_file'] to make sure 
+/// It skips zero byte files as well as hidden files and hidden directories. It calls ['crate::dupefiles::is_duplicate_file()'] to make sure 
 /// its safe to delete  one copy of identified duplicate. Prints to stdout.
 /// 
 /// # Arguments
