@@ -16,3 +16,11 @@ $./dupefiles /home/minty/Downloads/
 DUPE1.NAME,DUPE1.SIZE,DUPE2.NAME,DUPE2.SIZEa
 "/home/minty/Downloads/dupe.jpg",85448,"/home/minty/Downloads/Chung_1_1000.jpg",85448
 ```
+
+Compile and run with debug feature enabled. Prints all files encountered.
+
+```bash
+#!/usr/bin/env bash
+cargo build --features debug_loop
+cargo run --features debug_loop  -- $@
+```

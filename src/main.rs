@@ -17,6 +17,7 @@ use std::os::unix::fs::MetadataExt;
 use anyhow::{Context, Result};
 use walkdir::WalkDir;
 use dupefiles::{compute_sha256,is_hidden};
+use std::fmt;
 
 /// This function takes two Path values and returns boolean indicating whether the files are duplicates.
 /// It considers file size, sha256sum, and inode, deviceid to determine if the two paths are duplicates
@@ -69,6 +70,22 @@ fn is_duplicate_file(file1: &Path,file2: &Path) -> bool {
     // looks like a duplicate file. safe to delete one..
     true
 }
+#[cfg(feature = "debug_loop")]
+fn log_message(args: fmt::Arguments) {
+    println!("{}", args);
+}
+
+#[cfg(not(feature = "debug_loop"))]
+fn log_message(_args: fmt::Arguments) {
+}
+
+// Macro to make it easier to use log_message with format strings
+macro_rules! log {
+    ($($arg:tt)*) => {
+        log_message(format_args!($($arg)*))
+    };
+}
+
 
 /// This function takes a directory Path value and prints to stdout, a csv file indicating duplicates identified.
 /// It skips zero byte files as well as hidden files and hidden directories. It calls ['crate::dupefiles::is_duplicate_file()'] to make sure 
@@ -87,7 +104,13 @@ fn find_duplicates(directory: &Path) -> Result<()> {
     let mut hash_map: HashMap<String, PathBuf> = HashMap::new();
 
     for entry in WalkDir::new(directory).into_iter().filter_map(|e| e.ok()) {
-        let path = entry.path();
+       let path = entry.path();
+       log!("{}",path.display());
+
+
+       if path.is_symlink() {
+           continue; 
+       }
 
        let fsize: u64 = fs::metadata(path).unwrap().len();
         if is_hidden::is_hidden(path) || fsize == 0 {
