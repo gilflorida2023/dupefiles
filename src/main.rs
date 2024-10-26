@@ -16,7 +16,7 @@ use std::io::{Error,ErrorKind};
 use std::os::unix::fs::MetadataExt;
 use anyhow::{Context, Result};
 use walkdir::WalkDir;
-use dupefiles::{get_file_size,compute_sha256,is_hidden};
+use dupefiles::{compute_sha256,is_hidden};
 
 /// This function takes a Path value and returns the inode and device id from the Metadata..
 /// It considers file size, sha256sum, and inode, deviceid to determine if the two paths are duplicates
@@ -49,22 +49,17 @@ fn get_file_info(path: &Path) -> std::io::Result<(u64, u64)> {
 ///
 fn is_duplicate_file(file1: &Path,file2: &Path) -> bool {
 
+
+
     // validate two files exist
     if ! file1.try_exists().unwrap() || ! file2.try_exists().unwrap() {
         return false;
     }
+
+    // validate file sizes equal
+    let f1size = fs::metadata(file1).unwrap().len();
+    let f2size: u64 = fs::metadata(file2).unwrap().len();
     
-    // verify two files have same size
-    let f1size:u64= match get_file_size::get_file_size(file1) {
-        Ok(size) => size,
-        Err(_e) => 0,
-    };
-
-    let f2size:u64= match get_file_size::get_file_size(file2) {
-        Ok(size) => size,
-        Err(_e) => 0,
-    };
-
     if f1size != f2size {
         return false;
     }
@@ -108,11 +103,14 @@ fn find_duplicates(directory: &Path) -> Result<()> {
 
     for entry in WalkDir::new(directory).into_iter().filter_map(|e| e.ok()) {
         let path = entry.path();
-        
+
+       let fsize: u64 = fs::metadata(path).unwrap().len();
+       /*
         let fsize:u64= match get_file_size::get_file_size(path) {
             Ok(size) => size,
             Err(_e) => 0,
         };
+        */
         if is_hidden::is_hidden(path) || fsize == 0 {
             continue;
         }
@@ -121,11 +119,12 @@ fn find_duplicates(directory: &Path) -> Result<()> {
                 .with_context(|| format!("Failed to compute hash for {}", path.display()))?;
 
             if let Some(existing_path) = hash_map.get(&hash) {
+                /*
                 let existing_fsize:u64= match get_file_size::get_file_size(existing_path) {
                     Ok(size) => size,
                     Err(_e) => 0,
                 };
-
+                */
                 if ! is_duplicate_file(&existing_path,&path) {
                     continue;
                 }
@@ -136,6 +135,7 @@ fn find_duplicates(directory: &Path) -> Result<()> {
                         HEADER_PRINTED_ONCE = true;
                     }
                 }
+                let existing_fsize: u64 = fs::metadata(existing_path).unwrap().len();
                 println!("\"{}\",{},\"{}\",{}", existing_path.display(),existing_fsize,path.display(),fsize);
             } else {
                 hash_map.insert(hash, path.to_path_buf());

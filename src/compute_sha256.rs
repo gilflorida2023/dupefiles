@@ -72,7 +72,7 @@ mod tests {
         fs::remove_file(&test_file_path).expect("Unable to delete test file");
     }
     #[test]
-    fn test_get_file_size_non_existing_file() {
+    fn test_compute_sha_256_checksum_non_existing_file() {
         let path = Path::new("/non/existing/file.txt");
         let result= compute_sha256(&path) ;
         assert!(result.is_err());
