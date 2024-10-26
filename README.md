@@ -21,6 +21,6 @@ Compile and run with debug feature enabled. Prints all files encountered.
 
 ```bash
 #!/usr/bin/env bash
-cargo build --features debug_loop
-cargo run --features debug_loop  -- $@
+cargo build --features debug
+cargo run --features debug  -- $@
 ```

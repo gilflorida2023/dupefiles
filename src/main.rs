@@ -18,6 +18,7 @@ use anyhow::{Context, Result};
 use walkdir::WalkDir;
 use dupefiles::{compute_sha256,is_hidden};
 use std::fmt;
+use std::arch::asm;
 
 /// This function takes two Path values and returns boolean indicating whether the files are duplicates.
 /// It considers file size, sha256sum, and inode, deviceid to determine if the two paths are duplicates
@@ -70,19 +71,22 @@ fn is_duplicate_file(file1: &Path,file2: &Path) -> bool {
     // looks like a duplicate file. safe to delete one..
     true
 }
-#[cfg(feature = "debug_loop")]
-fn log_message(args: fmt::Arguments) {
+#[cfg(feature = "debug")]
+fn debug_message(args: fmt::Arguments) {
     println!("{}", args);
 }
 
-#[cfg(not(feature = "debug_loop"))]
-fn log_message(_args: fmt::Arguments) {
+#[cfg(not(feature = "debug"))]
+fn debug_message(_args: fmt::Arguments) {
+    unsafe {
+        asm!("nop");
+    }
 }
 
-// Macro to make it easier to use log_message with format strings
+// Macro to make it easier to use debug_message with format strings
 macro_rules! log {
     ($($arg:tt)*) => {
-        log_message(format_args!($($arg)*))
+        debug_message(format_args!($($arg)*))
     };
 }
 
