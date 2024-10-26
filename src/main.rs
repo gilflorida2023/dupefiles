@@ -13,13 +13,17 @@ use std::collections::HashMap;
 use std::{env,fs};
 use std::path::{Path, PathBuf};
 use std::io::{Error,ErrorKind};
-use std::os::unix::fs::MetadataExt;
+//use std::os::unix::fs::MetadataExt;
 use anyhow::{Context, Result};
 use walkdir::WalkDir;
-use dupefiles::{compute_sha256,is_hidden};
 use std::fmt;
 use std::arch::asm;
 
+use crate::is_duplicate_file::is_duplicate_file;
+pub mod compute_sha256;
+pub mod is_hidden;
+pub mod is_duplicate_file;
+/*
 /// This function takes two Path values and returns boolean indicating whether the files are duplicates.
 /// It considers file size, sha256sum, and inode, deviceid to determine if the two paths are duplicates
 /// of each other, or the same file.
@@ -71,6 +75,8 @@ fn is_duplicate_file(file1: &Path,file2: &Path) -> bool {
     // looks like a duplicate file. safe to delete one..
     true
 }
+*/
+// Debug routines
 #[cfg(feature = "debug")]
 fn debug_message(args: fmt::Arguments) {
     println!("{}", args);
@@ -174,38 +180,4 @@ fn main() -> Result<(),Error> {
     let _ = find_duplicates(directory);
     eprintln!("Success");
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use tempfile::Builder;
-    #[test]
-    fn test_no_duplicates_with_hard_link() {
-        // Create a temporary directory
-        let tmp_dir = Builder::new()
-        .prefix("hardlink_detect_dupes")
-        .tempdir()
-        .unwrap();
-
-        let dir_path = tmp_dir.path();
-    
-        // Create a temporary file
-        let file_path = dir_path.join("test_file.txt");
-        fs::write(&file_path, "duplicate content").unwrap();
-    
-        // Create a hard link to the temporary file
-        let link_path = dir_path.join("test_file_link.txt");
-        fs::hard_link(&file_path, &link_path).unwrap();
-    
-        // Call the duplicate detection function
-        let result = is_duplicate_file(&file_path,&link_path);
-    
-        // Assert that no duplicates are detected since they point to the same inode
-        assert_eq!(result, false, "Should not detect duplicates for hard links");
-    
-        // Clean up the test files explicitly
-        fs::remove_file(&file_path).expect("Unable to delete test file");
-        fs::remove_file(&link_path).expect("Unable to delete hard link");
-    }
 }
