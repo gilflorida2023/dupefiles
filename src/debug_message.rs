@@ -1,7 +1,6 @@
 use std::arch::asm;
 use std::fmt;
-//pub use crate::log;
-//use crate::debug_message::debug_message;
+
 #[cfg(feature = "debug")]
 pub fn debug_message(args: fmt::Arguments) {
     eprintln!("{}", args);

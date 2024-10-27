@@ -8,8 +8,8 @@ use std::arch::asm;
 use crate::is_duplicate_file::is_duplicate_file;
 use crate::compute_sha256::compute_sha256;
 use crate::is_hidden::is_hidden;
-pub use crate::log;
 use crate::debug_message::debug_message;
+pub use crate::log;
 
 /// This function takes a directory Path value and prints to stdout, a csv file indicating duplicates identified.
 /// It skips zero byte files as well as hidden files and hidden directories. It calls ['crate::dupefiles::is_duplicate_file()'] to make sure 
