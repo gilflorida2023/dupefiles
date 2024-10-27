@@ -12,9 +12,12 @@ Finds all duplicate files in a specified sub-directory tree specified on command
 ```
 
 ```bash
-$./dupefiles /home/minty/Downloads/
-DUPE1.NAME,DUPE1.SIZE,DUPE2.NAME,DUPE2.SIZEa
-"/home/minty/Downloads/dupe.jpg",85448,"/home/minty/Downloads/Chung_1_1000.jpg",85448
+$ dupefiles ~/Downloads/ > /tmp/out.csv
+Elapsed time: 2s 994ms
+$ cat /tmp/out.csv
+DUPE1.NAME,DUPE1.SIZE,DUPE2.NAME,DUPE2.SIZE
+"/home/linux/Downloads/dupe.jpg",85448,"/home/linux/Downloads/Chung_1_1000.jpg",85448
+$ 
 ```
 
 Compile and run with debug feature enabled. Prints all files encountered.
