@@ -2,56 +2,77 @@ use std::fs;
 use std::path::Path;
 use std::os::unix::fs::MetadataExt;
 use crate::compute_sha256::compute_sha256;
-
-/// This function takes two Path values and returns boolean indicating whether the files are duplicates.
-/// It considers file size, sha256sum, and inode, deviceid to determine if the two paths are duplicates
-/// of each other, or the same file.
-/// 
+/// Determines if two files are duplicates based on their content and metadata.
+///
+/// This function checks if two files are duplicates by comparing their size, SHA256 hash,
+/// and inode information. It considers files as duplicates if they have the same content
+/// but are stored as separate files on the filesystem.
+///
 /// # Arguments
 ///
-/// * `file1` - The first standard file Path
-/// * `file2` - The second standard file Path
+/// * `file1` - A reference to the `Path` of the first file to compare.
+/// * `file2` - A reference to the `Path` of the second file to compare.
 ///
 /// # Returns
 ///
-/// bool reflecting whether the two paths are duplicates.
+/// Returns `true` if the files are duplicates, `false` otherwise.
 ///
+/// # Panics
+///
+/// This function will panic if:
+/// - File existence checks fail.
+/// - File metadata cannot be retrieved.
+/// - SHA256 hash computation fails.
+///
+/// # Examples
+///
+/// ```
+/// use std::path::Path;
+/// use std::fs::File;
+/// use std::io::Write;
+/// use dupefiles::is_duplicate_file::is_duplicate_file;
+///
+/// // Create two files with the same content
+/// let file1_path = Path::new("test_file1.txt");
+/// let file2_path = Path::new("test_file2.txt");
+/// let content = b"Test content";
+///
+/// File::create(file1_path).unwrap().write_all(content).unwrap();
+/// File::create(file2_path).unwrap().write_all(content).unwrap();
+///
+/// assert!(is_duplicate_file(file1_path, file2_path));
+///
+/// // Clean up: remove the test files
+/// std::fs::remove_file(file1_path).unwrap();
+/// std::fs::remove_file(file2_path).unwrap();
+/// ```
+///
+/// # Note
+///
+/// This function considers files as non-duplicates if they are actually the same file
+/// (i.e., same inode and device ID). This is to distinguish between true duplicates
+/// and hard links.
 pub fn   is_duplicate_file(file1: &Path,file2: &Path) -> bool {
-    // validate two files exist
     if ! file1.try_exists().unwrap() || ! file2.try_exists().unwrap() {
         return false;
     }
-
-    // validate file sizes equal
     let f1size = fs::metadata(file1).unwrap().len();
     let f2size: u64 = fs::metadata(file2).unwrap().len();
-    
     if f1size != f2size {
         return false;
     }
-
-    // vereify two files have same hash
     let f1hash = compute_sha256(file1).unwrap();
     let f2hash = compute_sha256(file2).unwrap();
-    
     if f1hash != f2hash {
         return false;   
     }
-
-    // dont be tricked by external devices or hardlinks
-    // if two alleged files share same device id and inode, 
-    // its  really only one file.
     let f1inode: u64 = fs::metadata(file1).unwrap().ino();
     let f1device_id: u64 = fs::metadata(file1).unwrap().dev();
-    
     let f2inode: u64 = fs::metadata(file2).unwrap().ino();
     let f2device_id: u64 = fs::metadata(file2).unwrap().dev();
-
     if  f1device_id == f2device_id && f1inode == f2inode {
         return false;
     }
-
-    // looks like a duplicate file. safe to delete one..
     true
 }
 
