@@ -3,31 +3,14 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use anyhow::{Context, Result};
 use walkdir::WalkDir;
-use std::fmt;
+//use std::fmt;
+#[cfg(not(feature = "debug"))]
 use std::arch::asm;
 use crate::is_duplicate_file::is_duplicate_file;
 use crate::compute_sha256::compute_sha256;
 use crate::is_hidden::is_hidden;
-
-
-#[cfg(feature = "debug")]
-fn debug_message(args: fmt::Arguments) {
-    println!("{}", args);
-}
-
-#[cfg(not(feature = "debug"))]
-fn debug_message(_args: fmt::Arguments) {
-    unsafe {
-        asm!("nop");
-    }
-}
-
-// Macro to make it easier to use debug_message with format strings
-macro_rules! log {
-    ($($arg:tt)*) => {
-        debug_message(format_args!($($arg)*))
-    };
-}
+pub use crate::log;
+use crate::debug_message::debug_message;
 
 /// This function takes a directory Path value and prints to stdout, a csv file indicating duplicates identified.
 /// It skips zero byte files as well as hidden files and hidden directories. It calls ['crate::dupefiles::is_duplicate_file()'] to make sure 
