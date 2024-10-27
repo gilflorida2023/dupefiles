@@ -3,8 +3,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use anyhow::{Context, Result};
 use walkdir::WalkDir;
-//use std::fmt;
-#[cfg(not(feature = "debug"))]
+#[allow(unused_imports)]
 use std::arch::asm;
 use crate::is_duplicate_file::is_duplicate_file;
 use crate::compute_sha256::compute_sha256;
@@ -46,7 +45,7 @@ pub fn find_duplicates(directory: &Path) -> Result<()> {
                 .with_context(|| format!("Failed to compute hash for {}", path.display()))?;
 
             if let Some(existing_path) = hash_map.get(&hash) {
-                if ! is_duplicate_file(&existing_path,&path) {
+                if ! is_duplicate_file(existing_path,path) {
                     continue;
                 }
 
