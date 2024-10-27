@@ -14,40 +14,14 @@ use std::path::Path;
 use std::io::{Error,ErrorKind};
 use anyhow::Result;
 use crate::find_duplicates::find_duplicates;
+use crate::elapsed_time::measure_elapsed_time;
 pub mod compute_sha256;
 pub mod is_hidden;
 pub mod is_duplicate_file;
 pub mod find_duplicates;
 pub mod debug_message;
-use std::time::Instant;
+pub mod elapsed_time;
 
-fn measure_elapsed_time<F>(f: F) -> String
-where
-    F: FnOnce(),
-{
-    let start = Instant::now();
-    f();
-    let duration = start.elapsed();
-    format_duration(duration)
-}
-
-fn format_duration(duration: std::time::Duration) -> String {
-    let total_seconds = duration.as_secs();
-    let hours = total_seconds / 3600;
-    let minutes = (total_seconds % 3600) / 60;
-    let seconds = total_seconds % 60;
-    let milliseconds = duration.subsec_millis();
-
-    if hours > 0 {
-        format!("{}h {}m {}s {}ms", hours, minutes, seconds, milliseconds)
-    } else if minutes > 0 {
-        format!("{}m {}s {}ms", minutes, seconds, milliseconds)
-    } else if seconds > 0 {
-        format!("{}s {}ms", seconds, milliseconds)
-    } else {
-        format!("{}ms", milliseconds)
-    }
-}
 
 /// The main entry point for the program dupefiles.
 ///
@@ -78,7 +52,6 @@ fn main() -> Result<(),Error> {
         let _ = find_duplicates(directory);
     });
     eprintln!("Elapsed time: {}", elapsed_time);
-
 
     Ok(())
 }
