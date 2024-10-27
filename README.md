@@ -7,7 +7,7 @@ Note: dupefiles skips hidden files/directories and zero byte files.
 
 ```bash
 $./dupefiles
-Usage: ./dupefiles \<directory>
+Usage: ./dupefiles <directory>
 Finds all duplicate files in a specified sub-directory tree specified on command-line.
 ```
 
