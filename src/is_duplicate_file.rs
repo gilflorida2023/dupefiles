@@ -1,6 +1,7 @@
 use std::fs;
 use std::path::Path;
 use std::os::unix::fs::MetadataExt;
+use crate::compute_sha256::compute_sha256;
 
 /// This function takes two Path values and returns boolean indicating whether the files are duplicates.
 /// It considers file size, sha256sum, and inode, deviceid to determine if the two paths are duplicates
@@ -30,8 +31,8 @@ pub fn   is_duplicate_file(file1: &Path,file2: &Path) -> bool {
     }
 
     // vereify two files have same hash
-    let f1hash = crate::compute_sha256::compute_sha256(file1).unwrap();
-    let f2hash = crate::compute_sha256::compute_sha256(file2).unwrap();
+    let f1hash = compute_sha256(file1).unwrap();
+    let f2hash = compute_sha256(file2).unwrap();
     
     if f1hash != f2hash {
         return false;   
