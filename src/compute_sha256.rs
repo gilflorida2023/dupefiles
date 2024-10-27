@@ -3,32 +3,30 @@ use std::io::{BufReader, Read, Result,Error, ErrorKind};
 use std::path::Path;
 use sha2::{Sha256, Digest};
 
-/// Calculate the sha256sum for the supplied&Path and return the checksum.
-///
-/// This function accepts a &Path reference.
+/// Computes the SHA256 hash of a file at the given path.
 ///
 /// # Arguments
 ///
-/// * `path` - The file is opened and the checksum calculated.
+/// * `path` - A reference to a `Path` representing the file to hash.
 ///
 /// # Returns
 ///
-/// sha256checksum for the input file as a String.
+/// * `Result<String>` - The SHA256 hash as a hexadecimal string if successful, or an error if the file
+///   doesn't exist or cannot be read.
 ///
 /// # Examples
 ///
+/// ```
+/// use std::path::Path;
+/// // use your_crate_name::compute_sha256;
+/// use dupefiles::compute_sha256::compute_sha256;
 ///
-/// # Panics
-///
-/// This function may panic if the file does not exist or is unreadible.
-///
-/// # Errors
-///
-/// This function uses `Result`, to report issues which prevent access to the file.
-///
-/// # Safety
-///
-/// This function is always safe to call.
+/// let path = Path::new("example.txt");
+/// match compute_sha256(path) {
+///     Ok(hash) => println!("SHA256: {}", hash),
+///     Err(e) => eprintln!("Error: {}", e),
+/// }
+/// ```
 pub fn compute_sha256(path: &Path) -> Result<String> {
     if ! path.try_exists()? {
         // Path does not exist, return an error
