@@ -50,7 +50,7 @@ pub fn find_duplicates(directory: &Path) -> Result<()> {
                     continue;
                 }
 
-                unsafe { // ony print header once
+                unsafe { // only print header once
                     if ! HEADER_PRINTED_ONCE {
                         println!("DUPE1.NAME,DUPE1.SIZE,DUPE1.HRSIZE,DUPE2.NAME,DUPE2.SIZE,DUPE2.HRSIZE");
                         HEADER_PRINTED_ONCE = true;
