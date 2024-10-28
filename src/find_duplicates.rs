@@ -9,6 +9,7 @@ use crate::is_duplicate_file::is_duplicate_file;
 use crate::compute_sha256::compute_sha256;
 use crate::is_hidden::is_hidden;
 use crate::debug_message::debug_message;
+use crate::human_readable_size::human_readable_size;
 pub use crate::log;
 
 /// This function takes a directory Path value and prints to stdout, a csv file indicating duplicates identified.
@@ -51,12 +52,12 @@ pub fn find_duplicates(directory: &Path) -> Result<()> {
 
                 unsafe { // ony print header once
                     if ! HEADER_PRINTED_ONCE {
-                        println!("DUPE1.NAME,DUPE1.SIZE,DUPE2.NAME,DUPE2.SIZE");
+                        println!("DUPE1.NAME,DUPE1.SIZE,DUPE1.HRSIZE,DUPE2.NAME,DUPE2.SIZE,DUPE2.HRSIZE");
                         HEADER_PRINTED_ONCE = true;
                     }
                 }
                 let existing_fsize: u64 = fs::metadata(existing_path).unwrap().len();
-                println!("\"{}\",{},\"{}\",{}", existing_path.display(),existing_fsize,path.display(),fsize);
+                println!("\"{}\",{},\"{}\",\"{}\",{},\"{}\"", existing_path.display(),existing_fsize,human_readable_size(existing_fsize),path.display(),fsize,human_readable_size(fsize));
             } else {
                 hash_map.insert(hash, path.to_path_buf());
             }

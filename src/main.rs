@@ -21,6 +21,7 @@ pub mod is_duplicate_file;
 pub mod find_duplicates;
 pub mod debug_message;
 pub mod elapsed_time;
+pub mod human_readable_size;
 
 
 /// The main entry point for the program dupefiles.
