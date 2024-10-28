@@ -38,3 +38,34 @@ pub fn human_readable_size(size_in_bytes: u64) -> String {
         format!("{:.1} {}", adjusted_size, UNITS[index])
     }
 }
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    //use std::path::PathBuf;
+
+ 
+    #[test]
+    fn test_tebibyte() {
+        assert_eq!(human_readable_size(241 * 1024 * 1024 * 1024 * 1024), "241.0 TiB");
+    }
+
+
+    #[test]
+    fn test_gibibyte() {
+        assert_eq!(human_readable_size(137 * 1024 * 1024 * 1024), "137.0 GiB");
+    }
+
+    #[test]
+    fn test_mebibyte() {
+        //assert_eq!(human_readable_size(1048576), "1.0 MiB");
+        assert_eq!(human_readable_size(42 * 1024 * 1024), "42.0 MiB");
+    }
+
+
+    #[test]
+    fn test_kibibyte() {
+        assert_eq!(human_readable_size(911 * 1024), "911.0 KiB");
+    }
+}
