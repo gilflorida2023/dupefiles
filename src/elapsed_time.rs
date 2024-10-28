@@ -54,7 +54,7 @@ where
 /// use std::time::Duration;
 /// use dupefiles::elapsed_time::format_duration;
 ///
-/// assert_eq!(format_duration(Duration::from_secs(3661)), "1h 1m 1s 0ms");
+/// assert_eq!(format_duration(Duration::from_secs(60*60+60+1)), "1h 1m 1s 0ms");
 /// assert_eq!(format_duration(Duration::from_secs(61)), "1m 1s 0ms");
 /// assert_eq!(format_duration(Duration::from_secs(1)), "1s 0ms");
 /// assert_eq!(format_duration(Duration::from_millis(500)), "500ms");

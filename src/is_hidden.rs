@@ -49,7 +49,6 @@ pub fn is_hidden(path: &Path) -> bool {
 mod tests {
     use super::*;
     use std::path::PathBuf;
-    //use is_hidden::is_hidden;
 
     #[test]
     fn test_is_hidden() {
