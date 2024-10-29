@@ -12,7 +12,6 @@
 use std::env;
 use std::path::Path;
 use std::io::{self,ErrorKind};
-// use anyhow::Result;
 use crate::find_duplicates::find_duplicates;
 use crate::elapsed_time::measure_elapsed_time;
 pub mod compute_sha256;
