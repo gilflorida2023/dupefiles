@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 use std::fs;
+use std::env;
 use std::path::{Path, PathBuf};
 use anyhow::Result;
+//use anyhow::Error;
 use walkdir::WalkDir;
 #[allow(unused_imports)]
 use std::arch::asm;
@@ -11,7 +13,8 @@ use crate::is_hidden::is_hidden;
 use crate::debug_message::debug_message;
 use crate::human_readable_size::human_readable_size;
 pub use crate::log;
-
+use std::io::ErrorKind;
+use std::io::Error;
 /// This function takes a directory Path value and prints to stdout, a csv file indicating duplicates identified.
 /// It skips zero byte files as well as hidden files and hidden directories. It calls ['crate::dupefiles::is_duplicate_file()'] to make sure 
 /// its safe to delete  one copy of identified duplicate. Prints to stdout.
@@ -28,8 +31,18 @@ pub fn find_duplicates(directory: &Path) -> Result<()> {
     static mut HEADER_PRINTED_ONCE: bool = false;
     let mut hash_map: HashMap<String, PathBuf> = HashMap::new();
 
-    for entry in WalkDir::new(directory).into_iter().filter_map(|e| e.ok()) {
-        let path = entry.path();
+
+    let current_dir = env::current_dir()?;
+    let absolute_path = current_dir.join(directory);
+    let canonical_directory = absolute_path.canonicalize()?;
+
+    if !canonical_directory.exists() {
+        return Err(Error::new(ErrorKind::NotFound, "Directory does not exist").into());
+    }
+
+
+    for entry in WalkDir::new(canonical_directory).into_iter().filter_map(|e| e.ok()) {
+        let path = entry.path(); 
         log!("{}", path.display());
 
         if is_hidden(path) {
