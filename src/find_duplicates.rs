@@ -36,11 +36,17 @@ pub fn find_duplicates(directory: &Path) -> Result<()> {
             continue;
         }
 
-        /*
         if path.is_symlink() {
-            continue;
+            // Retrieve symlink target
+            let link_target = fs::read_link(path)?;
+        
+            // Check if the link target exists
+            if ! link_target.exists() {
+                eprintln!("link file: {},ERROR :Target does not exist: {}", path.display(),link_target.display());
+                continue;
+            }
         }
-        */
+        
         let fsize: u64 = match fs::metadata(path) {
             Ok(metadata) => metadata.len(),
             Err(e) => {
@@ -52,7 +58,6 @@ pub fn find_duplicates(directory: &Path) -> Result<()> {
         if fsize == 0 {
             continue;
         }
-        
 
         if path.is_file() {
 
