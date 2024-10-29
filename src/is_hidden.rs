@@ -51,52 +51,84 @@ mod tests {
     use std::path::PathBuf;
 
     #[test]
-    fn test_is_hidden() {
-        assert!(is_hidden(&PathBuf::from("/Othermachine/home/minty/.cargo/bin/cargo-fmt")));
-        assert!(is_hidden(&PathBuf::from("/.cargo/bin/cargo-fmt")));
-        assert!(!is_hidden(&PathBuf::from("/Othermachine/home/minty/cargo-fmt")));
-        assert!(is_hidden(&PathBuf::from("/Othermachine/home/minty/.hidden_dir/file.txt")));
-        assert!(!is_hidden(&PathBuf::from("/Othermachine/home/minty/visible_dir/file.txt")));
-        assert!(is_hidden(&PathBuf::from("/.hidden_file")));
-        assert!(!is_hidden(&PathBuf::from("/visible_file")));
-        assert!(is_hidden(&PathBuf::from("/Othermachine/home/minty/directory/.hidden_file")));
-        assert!(!is_hidden(&PathBuf::from("/Othermachine/home/minty/directory/visible_file")));
+    fn test_hidden_file1() {
+        assert_eq!(is_hidden(&PathBuf::from("/Othermachine/home/user/.cargo/bin/cargo-fmt")),true);
     }
 
     #[test]
-    fn test_visible_file() {
+    fn test_is_hidden_dir2() {
+        assert_eq!(is_hidden(&PathBuf::from("/.cargo/bin/cargo-fmt")),true);
+    }
+
+    #[test]
+    fn test_visible_file3() {
+        assert_eq!(!is_hidden(&PathBuf::from("/Othermachine/home/user/cargo-fmt")),true);
+    }
+
+    #[test]
+    fn test_hidden_dir4() {
+        assert_eq!(is_hidden(&PathBuf::from("/Othermachine/home/user/.hidden_dir/file.txt")),true);
+    }
+
+    #[test]
+    fn test_visible_file5() {
+        assert_eq!(!is_hidden(&PathBuf::from("/Othermachine/home/user/visible_dir/file.txt")),true);
+    }
+
+    #[test]
+    fn test_hidden_file6() {
+        assert_eq!(is_hidden(&PathBuf::from("/.hidden_file")),true);
+    }
+
+    #[test]
+    fn test_visible_file7() {
+        assert_eq!(!is_hidden(&PathBuf::from("/visible_file")),true);
+    }
+
+    #[test]
+    fn test_hidden_file8() {
+        assert_eq!(is_hidden(&PathBuf::from("/Othermachine/home/user/directory/.hidden_file")),true);
+    }
+
+    #[test]
+    fn test_visible_file9() {
+        assert_eq!(!is_hidden(&PathBuf::from("/Othermachine/home/user/directory/visible_file")),true);
+    }
+
+    #[test]
+    fn test_visible_file10() {
         let path = Path::new("/home/user/documents/file.txt");
-        assert!(!is_hidden(path));
+        assert_eq!(!is_hidden(path),true);
     }
 
     #[test]
-    fn test_hidden_file() {
+    fn test_hidden_file11() {
         let path = Path::new("/home/user/.hidden_file.txt");
-        assert!(is_hidden(path));
+        assert_eq!(is_hidden(path),true);
     }
 
     #[test]
-    fn test_file_in_hidden_directory() {
+    fn test_file_in_hidden_directory12() {
         let path = Path::new("/home/user/.hidden_dir/file.txt");
-        assert!(is_hidden(path));
+        assert_eq!(is_hidden(path),true);
     }
 
     #[test]
-    fn test_hidden_directory() {
+    fn test_hidden_directory13() {
         let path = Path::new("/home/user/.hidden_dir");
-        assert!(is_hidden(path));
+        assert_eq!(is_hidden(path),true);
     }
 
     #[test]
-    fn test_empty_path() {
+    fn test_empty_path14() {
         let path = Path::new("");
-        assert!(!is_hidden(path));
+        assert_eq!(!is_hidden(path),true);
     }
 
     #[test]
-    fn test_root_path() {
+    fn test_root_path15() {
         let path = Path::new("/");
-        assert!(!is_hidden(path));
+        assert_eq!(!is_hidden(path),true);
     }
 
 }
