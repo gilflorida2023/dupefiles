@@ -22,7 +22,6 @@ pub mod debug_message;
 pub mod elapsed_time;
 pub mod human_readable_size;
 use std::error::Error;
-use std::panic;
 use std::backtrace::Backtrace;
 
 
@@ -39,15 +38,32 @@ use std::backtrace::Backtrace;
 /// * The required input file argument is missing
 /// * The input file cannot be read
 /// 
-//use std::panic;
+use std::panic;
 //use std::backtrace::Backtrace;
 fn main() -> Result<(), Box<dyn Error>> {
-
     panic::set_hook(Box::new(|panic_info| {
         let backtrace = Backtrace::capture();
-        eprintln!("Panic occurred: {:?}", panic_info);
-        eprintln!("Stack trace:\n{:?}", backtrace);
+        
+        eprintln!("=== Panic Occurred ===");
+        
+        // Extract location information
+        if let Some(location) = panic_info.location() {
+            eprintln!("Location: {}:{}:{}", location.file(), location.line(), location.column());
+        }
+        
+        // Extract payload message
+        if let Some(payload) = panic_info.payload().downcast_ref::<&str>() {
+            eprintln!("Payload: {}", payload);
+        } else if let Some(payload) = panic_info.payload().downcast_ref::<String>() {
+            eprintln!("Payload: {}", payload);
+        }
+        
+        // Print formatted backtrace
+        eprintln!("\nBacktrace:\n{}", backtrace);
+        
+        eprintln!("=== End of Panic ===");
     }));
+
 
     let name = env!("CARGO_PKG_NAME");
     let version = env!("CARGO_PKG_VERSION");
