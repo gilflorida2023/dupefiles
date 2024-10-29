@@ -42,6 +42,7 @@ use std::backtrace::Backtrace;
 //use std::panic;
 //use std::backtrace::Backtrace;
 fn main() -> Result<(), Box<dyn Error>> {
+
     panic::set_hook(Box::new(|panic_info| {
         let backtrace = Backtrace::capture();
         eprintln!("Panic occurred: {:?}", panic_info);
@@ -53,7 +54,6 @@ fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<String> = env::args().collect();
     if args.len() != 2 {
         eprintln!("\nVersion:{}\nUsage: {} <directory>\nFinds all duplicate files in a specified sub-directory tree specified on command-line.", version, name);
-        //return Err(Box::new(io::Error::new(ErrorKind::InvalidInput, "Invalid number of arguments")));
         return Ok(())
     }
 
