@@ -2,6 +2,10 @@ use std::fs;
 use std::path::Path;
 use std::os::unix::fs::MetadataExt;
 use crate::compute_sha256::compute_sha256;
+
+use std::io::Error;
+
+
 /// Determines if two files are duplicates based on their content and metadata.
 ///
 /// This function checks if two files are duplicates by comparing their size, SHA256 hash,
@@ -40,43 +44,75 @@ use crate::compute_sha256::compute_sha256;
 /// File::create(file1_path).unwrap().write_all(content).unwrap();
 /// File::create(file2_path).unwrap().write_all(content).unwrap();
 ///
-/// assert!(is_duplicate_file(file1_path, file2_path));
+/// // Use unwrap() to get the boolean result, or handle the error appropriately
+/// assert!(is_duplicate_file(file1_path, file2_path).unwrap());
 ///
 /// // Clean up: remove the test files
 /// std::fs::remove_file(file1_path).unwrap();
 /// std::fs::remove_file(file2_path).unwrap();
 /// ```
-///
 /// # Note
 ///
 /// This function considers files as non-duplicates if they are actually the same file
 /// (i.e., same inode and device ID). This is to distinguish between true duplicates
 /// and hard links.
-pub fn   is_duplicate_file(file1: &Path,file2: &Path) -> bool {
-    if ! file1.try_exists().unwrap() || ! file2.try_exists().unwrap() {
-        return false;
+pub fn is_duplicate_file(file1: &Path, file2: &Path) -> Result<bool, Error> {
+    if !file1.try_exists().map_err(|e| {
+        eprintln!("Error checking existence of file1: {}", e);
+        e
+    })? || !file2.try_exists().map_err(|e| {
+        eprintln!("Error checking existence of file2: {}", e);
+        e
+    })? {
+        return Ok(false);
     }
-    let f1size = fs::metadata(file1).unwrap().len();
-    let f2size: u64 = fs::metadata(file2).unwrap().len();
+
+    let f1size = fs::metadata(file1).map_err(|e| {
+        eprintln!("Error accessing metadata of file1: {}", e);
+        e
+    })?.len();
+    let f2size = fs::metadata(file2).map_err(|e| {
+        eprintln!("Error accessing metadata of file2: {}", e);
+        e
+    })?.len();
+
     if f1size != f2size {
-        return false;
+        return Ok(false);
     }
-    let f1hash = compute_sha256(file1).unwrap();
-    let f2hash = compute_sha256(file2).unwrap();
+
+    let f1hash = compute_sha256(file1).map_err(|e| {
+        eprintln!("Error computing SHA256 for file1: {}", e);
+        e
+    })?;
+    let f2hash = compute_sha256(file2).map_err(|e| {
+        eprintln!("Error computing SHA256 for file2: {}", e);
+        e
+    })?;
+
     if f1hash != f2hash {
-        return false;   
+        return Ok(false);
     }
-    let f1inode: u64 = fs::metadata(file1).unwrap().ino();
-    let f1device_id: u64 = fs::metadata(file1).unwrap().dev();
-    let f2inode: u64 = fs::metadata(file2).unwrap().ino();
-    let f2device_id: u64 = fs::metadata(file2).unwrap().dev();
-    if  f1device_id == f2device_id && f1inode == f2inode {
-        return false;
+
+    let f1metadata = fs::metadata(file1).map_err(|e| {
+        eprintln!("Error accessing metadata of file1: {}", e);
+        e
+    })?;
+    let f2metadata = fs::metadata(file2).map_err(|e| {
+        eprintln!("Error accessing metadata of file2: {}", e);
+        e
+    })?;
+
+    let f1inode = f1metadata.ino();
+    let f1device_id = f1metadata.dev();
+    let f2inode = f2metadata.ino();
+    let f2device_id = f2metadata.dev();
+
+    if f1device_id == f2device_id && f1inode == f2inode {
+        return Ok(false);
     }
-    true
+
+    Ok(true)
 }
-
-
 
 #[cfg(test)]
 mod tests {
@@ -104,10 +140,12 @@ mod tests {
         let result = is_duplicate_file(&file_path,&link_path);
     
         // Assert that no duplicates are detected since they point to the same inode
-        assert_eq!(result, false, "Should not detect duplicates for hard links");
+        assert!(result.is_ok(), "is_duplicate_file should not return an error");
+        assert_eq!(result.unwrap(), false, "Should not detect duplicates for hard links");
     
         // Clean up the test files explicitly
         fs::remove_file(&file_path).expect("Unable to delete test file");
         fs::remove_file(&link_path).expect("Unable to delete hard link");
     }
 }
+    

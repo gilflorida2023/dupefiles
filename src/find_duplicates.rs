@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
-use anyhow::{Context, Result};
+use anyhow::Result;
 use walkdir::WalkDir;
 #[allow(unused_imports)]
 use std::arch::asm;
@@ -29,35 +29,72 @@ pub fn find_duplicates(directory: &Path) -> Result<()> {
     let mut hash_map: HashMap<String, PathBuf> = HashMap::new();
 
     for entry in WalkDir::new(directory).into_iter().filter_map(|e| e.ok()) {
-       let path = entry.path();
-       log!("{}",path.display());
+        let path = entry.path();
+        log!("{}", path.display());
 
-
-       if path.is_symlink() {
-           continue; 
-       }
-
-       let fsize: u64 = fs::metadata(path).unwrap().len();
-        if is_hidden(path) || fsize == 0 {
+        if is_hidden(path) {
             continue;
         }
-        if path.is_file() {
-            let hash = compute_sha256(path)
-                .with_context(|| format!("Failed to compute hash for {}", path.display()))?;
 
-            if let Some(existing_path) = hash_map.get(&hash) {
-                if ! is_duplicate_file(existing_path,path) {
+        /*
+        if path.is_symlink() {
+            continue;
+        }
+        */
+        let fsize: u64 = match fs::metadata(path) {
+            Ok(metadata) => metadata.len(),
+            Err(e) => {
+                eprintln!("Error accessing metadata for {}: {}", path.display(), e);
+                continue;
+            }
+        };
+
+        if fsize == 0 {
+            continue;
+        }
+        
+
+        if path.is_file() {
+
+            let hash = match compute_sha256(path) {
+                Ok(h) => h,
+                Err(e) => {
+                    eprintln!("Failed to compute hash for {}: {}", path.display(), e);
                     continue;
                 }
+            };
 
-                unsafe { // only print header once
-                    if ! HEADER_PRINTED_ONCE {
+            if let Some(existing_path) = hash_map.get(&hash) {
+                match is_duplicate_file(existing_path, path) {
+                    Ok(is_duplicate) => {
+                        if !is_duplicate {
+                            continue;
+                        }
+                    },
+                    Err(e) => {
+                        eprintln!("Error checking for duplicate file: {}", e);
+                        continue;
+                    }
+                }
+            
+                unsafe {
+                    if !HEADER_PRINTED_ONCE {
                         println!("DUPE1.NAME,DUPE1.SIZE,DUPE1.HRSIZE,DUPE2.NAME,DUPE2.SIZE,DUPE2.HRSIZE");
                         HEADER_PRINTED_ONCE = true;
                     }
                 }
-                let existing_fsize: u64 = fs::metadata(existing_path).unwrap().len();
-                println!("\"{}\",{},\"{}\",\"{}\",{},\"{}\"", existing_path.display(),existing_fsize,human_readable_size(existing_fsize),path.display(),fsize,human_readable_size(fsize));
+
+                let existing_fsize: u64 = match fs::metadata(existing_path) {
+                    Ok(metadata) => metadata.len(),
+                    Err(e) => {
+                        eprintln!("Error accessing metadata for {}: {}", existing_path.display(), e);
+                        continue;
+                    }
+                };
+
+                println!("\"{}\",{},\"{}\",\"{}\",{},\"{}\"", 
+                    existing_path.display(), existing_fsize, human_readable_size(existing_fsize),
+                    path.display(), fsize, human_readable_size(fsize));
             } else {
                 hash_map.insert(hash, path.to_path_buf());
             }

@@ -11,8 +11,8 @@
 
 use std::env;
 use std::path::Path;
-use std::io::{Error,ErrorKind};
-use anyhow::Result;
+use std::io::{self,ErrorKind};
+// use anyhow::Result;
 use crate::find_duplicates::find_duplicates;
 use crate::elapsed_time::measure_elapsed_time;
 pub mod compute_sha256;
@@ -22,6 +22,9 @@ pub mod find_duplicates;
 pub mod debug_message;
 pub mod elapsed_time;
 pub mod human_readable_size;
+use std::error::Error;
+use std::panic;
+use std::backtrace::Backtrace;
 
 
 /// The main entry point for the program dupefiles.
@@ -36,19 +39,30 @@ pub mod human_readable_size;
 /// This function will return an error if:
 /// * The required input file argument is missing
 /// * The input file cannot be read
-fn main() -> Result<(),Error> {
+/// 
+//use std::panic;
+//use std::backtrace::Backtrace;
+fn main() -> Result<(), Box<dyn Error>> {
+    panic::set_hook(Box::new(|panic_info| {
+        let backtrace = Backtrace::capture();
+        eprintln!("Panic occurred: {:?}", panic_info);
+        eprintln!("Stack trace:\n{:?}", backtrace);
+    }));
+
     let name = env!("CARGO_PKG_NAME");
     let version = env!("CARGO_PKG_VERSION");
     let args: Vec<String> = env::args().collect();
     if args.len() != 2 {
         eprintln!("\nVersion:{}\nUsage: {} <directory>\nFinds all duplicate files in a specified sub-directory tree specified on command-line.", version, name);
-        std::process::exit(1);
+        //return Err(Box::new(io::Error::new(ErrorKind::InvalidInput, "Invalid number of arguments")));
+        return Ok(())
     }
 
     let directory = Path::new(&args[1]);
-    if ! directory.try_exists()? {
-        return Err(Error::new(ErrorKind::NotFound, "File or directory not found"));
+    if !directory.try_exists()? {
+        return Err(Box::new(io::Error::new(ErrorKind::NotFound, "File or directory not found")));
     }
+
     let elapsed_time = measure_elapsed_time(|| {
         let _ = find_duplicates(directory);
     });
