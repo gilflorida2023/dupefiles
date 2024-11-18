@@ -8,10 +8,10 @@ sha2 = "*"
 walkdir = "*"
 anyhow = "*"
 tempfile = "*"
+clap = { version = "4.4", features = ["derive"] }
 
 [features]
 debug = []
-
 
 #[lints]
 #rust = { unused_variables = "allow", unused_macros="allow" }

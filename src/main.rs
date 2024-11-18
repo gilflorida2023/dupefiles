@@ -1,85 +1,119 @@
-//! Find all duplicate files in a specified sub-directory tree specified on command-line.
-//! Note: hidden files, hidden directories and zero byte files are skipped.
-//!
-//! # Usage
-//!
-//! ```
-//! $ cargo run -- <input_directory>
-//! ```
-//!
-//! Results will be printed to stdout.
-
-use std::env;
-use std::path::Path;
-use std::io::{self,ErrorKind};
-use crate::find_duplicates::find_duplicates;
-use crate::elapsed_time::measure_elapsed_time;
-pub mod compute_sha256;
-pub mod is_hidden;
-pub mod is_duplicate_file;
-pub mod find_duplicates;
-pub mod debug_message;
-pub mod elapsed_time;
-pub mod human_readable_size;
-use std::error::Error;
-use std::backtrace::Backtrace;
-
-
-/// The main entry point for the program dupefiles.
-///
-/// # Arguments
-///
-/// The program expects a command-line arguments:
-/// * argument directory is the input file path (required)
-///
-/// # Errors
-///
-/// This function will return an error if:
-/// * The required input file argument is missing
-/// * The input file cannot be read
-/// 
+use std::fs::File;
+use std::io::{self, ErrorKind};
+use std::path::PathBuf;
+use std::time::Instant;
+use clap::Parser;
+use anyhow::Result;
+use std::process;
+use std::thread;
 use std::panic;
-//use std::backtrace::Backtrace;
-fn main() -> Result<(), Box<dyn Error>> {
+
+use dupefiles::find_duplicates::find_duplicates;
+
+/// Duplicate file finder - finds duplicate files in a directory tree
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+#[command(arg_required_else_help = true)]
+struct Args {
+    /// Directory to scan for duplicates
+    #[arg(value_name = "DIRECTORY")]
+    directory: PathBuf,
+
+    /// Optional comma-separated list of file extensions to filter by (e.g., "mp4,jpg")
+    #[arg(short, long)]
+    extensions: Option<String>,
+
+    /// Optional output file path (if not specified, prints to stdout)
+    #[arg(short, long)]
+    output: Option<PathBuf>,
+}
+
+fn measure_elapsed_time<F>(f: F) -> String
+where
+    F: FnOnce() -> Result<()>
+{
+    let start = Instant::now();
+    if let Err(e) = f() {
+        eprintln!("Error: {}", e);
+        process::exit(1);
+    }
+    let duration = start.elapsed();
+
+    let secs = duration.as_secs();
+    let millis = duration.subsec_millis();
+
+    if secs == 0 {
+        format!("{} milliseconds", millis)
+    } else {
+        format!("{} seconds {} milliseconds", secs, millis)
+    }
+}
+
+fn main() -> Result<()> {
+    // Set up custom panic handler
     panic::set_hook(Box::new(|panic_info| {
-        let backtrace = Backtrace::capture();
-        
-        eprintln!("=== Panic Occurred ===");
-        
-        // Extract location information
-        if let Some(location) = panic_info.location() {
-            eprintln!("Location: {}:{}:{}", location.file(), location.line(), location.column());
-        }
-        
-        // Extract payload message
-        if let Some(payload) = panic_info.payload().downcast_ref::<&str>() {
-            eprintln!("Payload: {}", payload);
-        } else if let Some(payload) = panic_info.payload().downcast_ref::<String>() {
-            eprintln!("Payload: {}", payload);
-        }
-        
-        // Print formatted backtrace
-        eprintln!("\nBacktrace:\n{}", backtrace);
-        
-        eprintln!("=== End of Panic ===");
+        let thread = thread::current();
+        let thread_name = thread.name().unwrap_or("<unnamed>");
+
+        let msg = match panic_info.payload().downcast_ref::<&str>() {
+            Some(s) => *s,
+            None => match panic_info.payload().downcast_ref::<String>() {
+                Some(s) => &s[..],
+                None => "Box<Any>",
+            },
+        };
+
+        let location = panic_info.location().unwrap();
+
+        eprintln!(
+            "thread '{}' panicked at '{}', {}:{}:{}",
+            thread_name,
+            msg,
+            location.file(),
+            location.line(),
+            location.column(),
+        );
+        process::exit(1);
     }));
 
+    let args = Args::parse();
 
-    let name = env!("CARGO_PKG_NAME");
-    let version = env!("CARGO_PKG_VERSION");
-    let args: Vec<String> = env::args().collect();
-    if args.len() != 2 {
-        eprintln!("\nVersion:{}\nUsage: {} <directory>\nFinds all duplicate files in a specified sub-directory tree specified on command-line.", version, name);
-        return Ok(())
+    let directory = args.directory.as_path();
+    if !directory.exists() {
+        return Err(io::Error::new(
+            ErrorKind::NotFound,
+            format!("Directory does not exist: {}", directory.display())
+        ).into());
     }
 
-    let directory = Path::new(&args[1]);
-    if !directory.try_exists()? {
-        return Err(Box::new(io::Error::new(ErrorKind::NotFound, "File or directory not found")));
+    if !directory.is_dir() {
+        return Err(io::Error::new(
+            ErrorKind::InvalidInput,
+            format!("Not a directory: {}", directory.display())
+        ).into());
     }
+
+    // Convert extensions to Vec<String> if provided
+    let extensions: Option<Vec<String>> = args.extensions.map(|ext| {
+        ext.trim_start_matches('*')
+           .trim_start_matches('.')
+           .split(',')
+           .map(|s| s.trim_start_matches('*')
+                     .trim_start_matches('.')
+                     .to_lowercase())
+           .filter(|s| !s.is_empty())
+           .collect()
+    });
+
+    // Set up output file if specified
+    let mut output_file = args.output.map(|path| {
+        File::create(path).map_err(|e| {
+            io::Error::new(ErrorKind::Other, format!("Failed to create output file: {}", e))
+        })
+    }).transpose()?;
 
     let elapsed_time = measure_elapsed_time(|| {
-        let _ = find_duplicates(directory);
+        find_duplicates(directory, extensions.as_ref(), output_file.as_mut())
     });
     eprintln!("Elapsed time: {}", elapsed_time);
 

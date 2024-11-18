@@ -33,9 +33,9 @@ pub fn compute_sha256(path: &Path) -> Result<String> {
         return Err(Error::new(ErrorKind::NotFound, "Path does not exist"))
     }
     let file = File::open(path)?;
-    let mut reader = BufReader::new(file);
+    let mut reader = BufReader::with_capacity(1024 * 1024, file); // 1MB buffer
     let mut hasher = Sha256::new();
-    let mut buffer = [0; 4096];
+    let mut buffer = [0; 1024 * 1024]; // Also increase the read buffer to 1MB
 
     loop {
         let bytes_read = reader.read(&mut buffer)?;

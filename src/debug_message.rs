@@ -23,15 +23,3 @@ pub fn debug_message(_args: fmt::Arguments) {
         asm!("nop");
     }
 }
-
-/// Macro for easier debug message formatting.
-/// 
-/// This macro allows for easier formatting of debug messages. It uses the `debug_message`
-/// function internally and supports format strings similar to `println!`.
-/// 
-#[macro_export]
-macro_rules! log {
-    ($($arg:tt)*) => {
-        debug_message(format_args!($($arg)*))
-    };
-}
