@@ -4,14 +4,14 @@ version = "1.0.0"
 edition = "2021"
 
 [dependencies]
-sha2 = "0.10.8"
-walkdir = "2.5.0"
-anyhow = "1.0.91"
-tempfile = "3.13.0"
+sha2 = "*"
+walkdir = "*"
+anyhow = "*"
+tempfile = "*"
 
 [features]
 debug = []
 
 
-[lints]
-rust = { unused_variables = "allow", unused_macros="allow" }
+#[lints]
+#rust = { unused_variables = "allow", unused_macros="allow" }
