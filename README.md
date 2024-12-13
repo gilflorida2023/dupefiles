@@ -1,3 +1,4 @@
+[![Rust](https://github.com/gilflorida2023/dupefiles/actions/workflows/rust.yml/badge.svg)](https://github.com/gilflorida2023/dupefiles/actions/workflows/rust.yml)
 # dupefiles
 
 A fast and efficient command-line tool to find duplicate files in directories. Uses SHA256 hashing for reliable duplicate detection.
